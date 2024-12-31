@@ -1,3 +1,4 @@
+import { FC } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "./button";
 import {
@@ -6,9 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
-import { useTheme } from "../common/theme-provider";
+import { useTheme } from "../../context/theme-provider";
 
-export function ThemeToggle() {
+const ThemeToggle: FC = () => {
   const { setTheme } = useTheme();
 
   return (
@@ -33,4 +34,8 @@ export function ThemeToggle() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+ThemeToggle.displayName = "ThemeToggle";
+
+export default ThemeToggle;

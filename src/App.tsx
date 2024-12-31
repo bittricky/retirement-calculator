@@ -1,4 +1,4 @@
-import { ThemeToggle } from "./components/ui/theme-toggle";
+import ThemeToggle from "./components/ui/theme-toggle";
 function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
