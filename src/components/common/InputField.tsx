@@ -31,9 +31,27 @@ const InputField: FC<InputFieldProps> = ({
           </div>
         )}
         <Input
-          type="number"
+          type="text"
           value={value}
-          onChange={(e) => onChange(name, Number(e.target.value))}
+          onChange={(e) => {
+            const val = e.target.value;
+            // Allow empty string, numbers, and decimal point
+            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+              onChange(name, val === "" ? 0 : Number(val));
+            }
+          }}
+          onBlur={(e) => {
+            const val = e.target.value;
+
+            if (val !== "") {
+              const num = Number(val);
+              if (min !== undefined && num < min) {
+                onChange(name, min);
+              } else if (max !== undefined && num > max) {
+                onChange(name, max);
+              }
+            }
+          }}
           min={min}
           max={max}
           className={cn(

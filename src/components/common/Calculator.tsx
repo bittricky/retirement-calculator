@@ -18,17 +18,17 @@ const Calculator: FC = () => {
   const [inputs, setInputs] = useState<RetirementInputs>({
     currentAge: 30,
     retirementAge: 65,
-    currentSavings: 50000,
-    monthlyContribution: 1000,
-    expectedReturns: [5, 7, 10],
-    monthlyExpenses: 5000,
-    earlyRetirementExpenses: 5000,
-    lateRetirementExpenses: 5000,
-    inflationRate: 3,
+    currentSavings: 100000,
+    monthlyContribution: 2000,
+    expectedReturns: [5, 7, 9],
+    monthlyExpenses: 6000,
+    earlyRetirementExpenses: 8000,
+    lateRetirementExpenses: 7000,
+    inflationRate: 2.5,
     taxRate: 25,
     retirementTaxRate: 15,
-    socialSecurityBenefit: 2000,
-    socialSecurityStartAge: 65,
+    socialSecurityBenefit: 2500,
+    socialSecurityStartAge: 67,
     simulationRuns: 1000,
   });
 
@@ -66,9 +66,7 @@ const Calculator: FC = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-2xl font-semibold">
-              Calculator Inputs
-            </CardTitle>
+            <CardTitle className="text-2xl font-semibold">Calculator</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
