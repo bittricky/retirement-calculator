@@ -31,6 +31,7 @@ export interface RetirementInputs {
 export interface RetirementResults {
   medianTotalNeeded: number;
   medianProjectedSavings: number;
+  medianGap: number;
   successRate: number;
   medianAdjustedMonthly: number;
 }
@@ -48,14 +49,10 @@ export interface InputFieldProps {
 }
 
 export interface ResultsProps {
-  results: {
-    totalNeeded: number;
-    projectedSavings: number;
-    gap: number;
-    adjustedMonthly: number;
-  };
-  inputs: {
-    retirementAge: number;
-    currentAge: number;
-  };
+  results: RetirementResults;
+  inputs: Pick<RetirementInputs, "retirementAge" | "currentAge">;
+}
+
+export interface OutlookProps {
+  successRate: number;
 }
