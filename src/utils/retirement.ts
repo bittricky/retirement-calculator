@@ -25,21 +25,20 @@ export function calculateRetirement(
   const yearsInEarlyRetirement = 20;
 
   /**
-   * Run a single Monte Carlo simulation of the retirement plan.
+   * Run a single simulation(Monte Carlo) of the retirement scenario.
    * https://en.wikipedia.org/wiki/Monte_Carlo_method
    *
-   * The simulation has two phases: accumulation and retirement. During the
-   * accumulation phase, the function simulates the growth of the savings based
-   * on the user's contributions and expected returns. During the retirement phase,
-   * the function simulates the expenses of the retirement based on the user's
-   * expenses and inflation rate.
+   * This function returns the final amount of savings after running the simulation.
+   * If the simulation fails, i.e. the user runs out of money, the function returns -1.
    *
-   * The function returns the final savings after the simulation. If the savings
-   * run out during the simulation, the function returns -1.
+   * The function first runs the accumulation phase, where it adds contributions and
+   * subtracts expenses from the savings. It then runs the retirement phase, where it
+   * subtracts expenses and taxes from the savings.
    */
   function runSimulation(): number {
     let savings = currentSavings;
     let contributions = monthlyContribution;
+    let expenses = monthlyExpenses;
 
     // Accumulation phase
     for (let year = 1; year <= yearsToRetirement; year++) {
@@ -47,25 +46,25 @@ export function calculateRetirement(
         expectedReturns[Math.floor(Math.random() * expectedReturns.length)];
 
       contributions *= 1 + inflationRate;
+      expenses *= 1 + inflationRate;
       savings *= 1 + annualReturn;
       savings += contributions * 12;
+      savings -= expenses * 12; // Subtract annual expenses
 
-      const growth = savings - (currentSavings + contributions * 12 * year);
+      const growth =
+        savings - (currentSavings + (contributions - expenses) * 12 * year);
       savings -= growth * taxRate;
     }
 
     // Retirement phase
-    let totalNeeded = 0;
     for (let year = 1; year <= yearsInRetirement; year++) {
       const annualReturn =
         expectedReturns[Math.floor(Math.random() * expectedReturns.length)];
 
-      const yearlyExpenses =
+      let yearlyExpenses =
         year <= yearsInEarlyRetirement
           ? earlyRetirementExpenses * 12 * Math.pow(1 + inflationRate, year)
           : lateRetirementExpenses * 12 * Math.pow(1 + inflationRate, year);
-
-      totalNeeded += yearlyExpenses;
 
       if (currentAge + yearsToRetirement + year >= socialSecurityStartAge) {
         const adjustedSocialSecurity =
@@ -105,10 +104,17 @@ export function calculateRetirement(
   // Calculate total needed (median case)
   let medianTotalNeeded = 0;
   for (let year = 1; year <= yearsInRetirement; year++) {
-    const yearlyExpenses =
+    let yearlyExpenses =
       year <= yearsInEarlyRetirement
         ? earlyRetirementExpenses * 12 * Math.pow(1 + inflationRate, year)
         : lateRetirementExpenses * 12 * Math.pow(1 + inflationRate, year);
+
+    if (currentAge + yearsToRetirement + year >= socialSecurityStartAge) {
+      const adjustedSocialSecurity =
+        socialSecurityBenefit * 12 * Math.pow(1 + inflationRate, year);
+      yearlyExpenses -= adjustedSocialSecurity;
+    }
+
     medianTotalNeeded += yearlyExpenses;
   }
 
