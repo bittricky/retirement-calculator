@@ -75,4 +75,4 @@ The success rate indicates the percentage of scenarios where your savings last t
 
 ---
 
-This project was an exercise to learn about the Monte Carlo Simulation method. What it does, How it works, and how to use it.
+This project was an exercise to learn about the Monte Carlo Simulation method. What it does, How it works, and how to use it. Speak to a professional financial planner if you are serious about retirement planning. The calculator is not intended to be a substitute for professional financial advice.
