@@ -11,30 +11,25 @@ export function calculateRetirement(
     monthlyExpenses,
     earlyRetirementExpenses,
     lateRetirementExpenses,
-    inflationRate,
-    taxRate,
-    retirementTaxRate,
+    inflationRate: rawInflationRate,
+    taxRate: rawTaxRate,
+    retirementTaxRate: rawRetirementTaxRate,
     socialSecurityBenefit,
     socialSecurityStartAge,
-    expectedReturns,
+    expectedReturns: rawExpectedReturns,
     simulationRuns,
   } = inputs;
+
+  // Convert rates from percentages to decimals
+  const inflationRate = rawInflationRate / 100;
+  const taxRate = rawTaxRate / 100;
+  const retirementTaxRate = rawRetirementTaxRate / 100;
+  const expectedReturns = rawExpectedReturns.map(rate => rate / 100);
 
   const yearsToRetirement = retirementAge - currentAge;
   const yearsInRetirement = 30;
   const yearsInEarlyRetirement = 20;
 
-  /**
-   * Run a single simulation(Monte Carlo) of the retirement scenario.
-   * https://en.wikipedia.org/wiki/Monte_Carlo_method
-   *
-   * This function returns the final amount of savings after running the simulation.
-   * If the simulation fails, i.e. the user runs out of money, the function returns -1.
-   *
-   * The function first runs the accumulation phase, where it adds contributions and
-   * subtracts expenses from the savings. It then runs the retirement phase, where it
-   * subtracts expenses and taxes from the savings.
-   */
   function runSimulation(): number {
     let savings = currentSavings;
     let contributions = monthlyContribution;
@@ -45,15 +40,22 @@ export function calculateRetirement(
       const annualReturn =
         expectedReturns[Math.floor(Math.random() * expectedReturns.length)];
 
-      contributions *= 1 + inflationRate;
-      expenses *= 1 + inflationRate;
-      savings *= 1 + annualReturn;
-      savings += contributions * 12;
-      savings -= expenses * 12; // Subtract annual expenses
+      // Apply returns first
+      savings *= (1 + annualReturn);
 
-      const growth =
-        savings - (currentSavings + (contributions - expenses) * 12 * year);
-      savings -= growth * taxRate;
+      // Adjust for inflation
+      contributions *= (1 + inflationRate);
+      expenses *= (1 + inflationRate);
+
+      // Add contributions and subtract expenses
+      savings += contributions * 12;
+      savings -= expenses * 12;
+
+      // Apply tax on investment gains
+      const growth = savings - (currentSavings + (contributions - expenses) * 12 * year);
+      if (growth > 0) {
+        savings -= growth * taxRate;
+      }
     }
 
     // Retirement phase
@@ -61,20 +63,30 @@ export function calculateRetirement(
       const annualReturn =
         expectedReturns[Math.floor(Math.random() * expectedReturns.length)];
 
+      // Calculate expenses with inflation
       let yearlyExpenses =
         year <= yearsInEarlyRetirement
           ? earlyRetirementExpenses * 12 * Math.pow(1 + inflationRate, year)
           : lateRetirementExpenses * 12 * Math.pow(1 + inflationRate, year);
 
+      // Apply social security benefit if eligible
       if (currentAge + yearsToRetirement + year >= socialSecurityStartAge) {
         const adjustedSocialSecurity =
           socialSecurityBenefit * 12 * Math.pow(1 + inflationRate, year);
         yearlyExpenses -= adjustedSocialSecurity;
       }
 
-      savings *= 1 + annualReturn;
+      // Apply investment returns
+      const investmentGains = savings * annualReturn;
+      savings += investmentGains;
+
+      // Subtract expenses
       savings -= yearlyExpenses;
-      savings -= savings * annualReturn * retirementTaxRate;
+
+      // Apply tax on investment gains
+      if (investmentGains > 0) {
+        savings -= investmentGains * retirementTaxRate;
+      }
 
       if (savings < 0) {
         return -1; // Simulation failed
@@ -84,6 +96,7 @@ export function calculateRetirement(
     return savings;
   }
 
+  // Run simulations
   const simulationResults: number[] = [];
   let successCount = 0;
 
@@ -95,14 +108,20 @@ export function calculateRetirement(
     }
   }
 
+  // Calculate median projected savings
   simulationResults.sort((a, b) => a - b);
+  const medianProjectedSavings = simulationResults.length > 0
+    ? simulationResults[Math.floor(simulationResults.length / 2)]
+    : 0;
 
-  const medianProjectedSavings =
-    simulationResults[Math.floor(simulationResults.length / 2)];
+  // Calculate success rate
   const successRate = (successCount / simulationRuns) * 100;
 
-  // Calculate total needed (median case)
+  // Calculate total needed for retirement (present value)
   let medianTotalNeeded = 0;
+  let discountedExpenses = 0;
+  const averageReturn = expectedReturns.reduce((a, b) => a + b) / expectedReturns.length;
+
   for (let year = 1; year <= yearsInRetirement; year++) {
     let yearlyExpenses =
       year <= yearsInEarlyRetirement
@@ -115,18 +134,21 @@ export function calculateRetirement(
       yearlyExpenses -= adjustedSocialSecurity;
     }
 
-    medianTotalNeeded += yearlyExpenses;
+    // Discount future expenses to present value
+    discountedExpenses += yearlyExpenses / Math.pow(1 + averageReturn, year);
   }
 
-  const medianGap = medianTotalNeeded - medianProjectedSavings;
+  medianTotalNeeded = discountedExpenses;
 
-  // Calculate adjusted monthly contribution (if success rate < 100%)
+  // Calculate the gap (positive means surplus, negative means shortfall)
+  const medianGap = medianProjectedSavings - medianTotalNeeded;
+
+  // Calculate required monthly adjustment if there's a shortfall
   let medianAdjustedMonthly = 0;
-  if (successRate < 100) {
-    const monthlyReturn =
-      expectedReturns.reduce((a, b) => a + b) / expectedReturns.length / 12;
+  if (medianGap < 0) {
+    const monthlyReturn = averageReturn / 12;
     medianAdjustedMonthly =
-      (medianGap * monthlyReturn) /
+      (Math.abs(medianGap) * monthlyReturn) /
       (Math.pow(1 + monthlyReturn, yearsToRetirement * 12) - 1);
   }
 
