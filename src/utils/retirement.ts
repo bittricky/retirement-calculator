@@ -118,20 +118,22 @@ export function calculateRetirement(
     medianTotalNeeded += yearlyExpenses;
   }
 
+  const medianGap = medianTotalNeeded - medianProjectedSavings;
+
   // Calculate adjusted monthly contribution (if success rate < 100%)
   let medianAdjustedMonthly = 0;
   if (successRate < 100) {
-    const additionalNeeded = medianTotalNeeded - medianProjectedSavings;
     const monthlyReturn =
       expectedReturns.reduce((a, b) => a + b) / expectedReturns.length / 12;
     medianAdjustedMonthly =
-      (additionalNeeded * monthlyReturn) /
+      (medianGap * monthlyReturn) /
       (Math.pow(1 + monthlyReturn, yearsToRetirement * 12) - 1);
   }
 
   return {
     medianTotalNeeded,
     medianProjectedSavings,
+    medianGap,
     successRate,
     medianAdjustedMonthly,
   };
