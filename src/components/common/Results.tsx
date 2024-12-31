@@ -113,12 +113,12 @@ const Results: FC<ResultsProps> = ({ results, inputs }) => {
                     <Progress 
                       value={results.successRate} 
                       className={cn(
-                        "w-24",
+                        "w-24 h-3",
                         results.successRate >= 80 
-                          ? "bg-green-600/30 dark:bg-green-400/30"
+                          ? "bg-green-600/20 dark:bg-green-400/20"
                           : results.successRate >= 60
-                          ? "bg-yellow-600/30 dark:bg-yellow-400/30"
-                          : "bg-destructive/30"
+                          ? "bg-yellow-600/20 dark:bg-yellow-400/20"
+                          : "bg-destructive/20"
                       )}
                       indicatorClassName={cn(
                         results.successRate >= 80 
