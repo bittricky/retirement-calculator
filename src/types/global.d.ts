@@ -34,3 +34,28 @@ export interface RetirementResults {
   successRate: number;
   medianAdjustedMonthly: number;
 }
+
+export interface InputFieldProps {
+  label: string;
+  name: string;
+  value: number;
+  onChange: (name: string, value: number) => void;
+  icon?: React.ReactNode;
+  prefix?: string;
+  suffix?: string;
+  min?: number;
+  max?: number;
+}
+
+export interface ResultsProps {
+  results: {
+    totalNeeded: number;
+    projectedSavings: number;
+    gap: number;
+    adjustedMonthly: number;
+  };
+  inputs: {
+    retirementAge: number;
+    currentAge: number;
+  };
+}
